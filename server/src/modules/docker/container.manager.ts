@@ -1,5 +1,15 @@
 import type { ContainerSpec, ContainerState } from './container'
 
+export interface ExecResult {
+  exitCode: number
+  stdout: Buffer
+  stderr: Buffer
+}
+
+export interface ExecOptions {
+  stdin?: NodeJS.ReadableStream | Buffer
+}
+
 export interface ContainerManager {
   create(spec: ContainerSpec): Promise<string>
   start(containerId: string): Promise<void>
@@ -11,6 +21,7 @@ export interface ContainerManager {
   logs(containerId: string, tail?: number): Promise<string[]>
   export(containerId: string): Promise<NodeJS.ReadableStream>
   putArchive(containerId: string, stream: NodeJS.ReadableStream, path: string): Promise<void>
+  exec(containerId: string, cmd: string[], opts?: ExecOptions): Promise<ExecResult>
 }
 
 export const CONTAINER_MANAGER = Symbol('ContainerManager')

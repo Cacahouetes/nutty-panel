@@ -1,5 +1,7 @@
 import Docker from 'dockerode'
-import type { ContainerManager } from './container.manager'
+import { PassThrough } from 'node:stream'
+import { once } from 'node:events'
+import type { ContainerManager, ExecOptions, ExecResult } from './container.manager'
 import type { ContainerSpec, ContainerState } from './container'
 
 export class DockerContainerManager implements ContainerManager {
@@ -76,6 +78,60 @@ export class DockerContainerManager implements ContainerManager {
     path: string,
   ): Promise<void> {
     await this.docker.getContainer(containerId).putArchive(stream, { path })
+  }
+
+  async exec(containerId: string, cmd: string[], opts: ExecOptions = {}): Promise<ExecResult> {
+    const container = this.docker.getContainer(containerId)
+    const attachStdin = opts.stdin !== undefined
+    const exec = await container.exec({
+      Cmd: cmd,
+      AttachStdout: true,
+      AttachStderr: true,
+      AttachStdin: attachStdin,
+    })
+    const socket = await exec.start({ hijack: true, stdin: attachStdin })
+    const stdout = new PassThrough()
+    const stderr = new PassThrough()
+    const outChunks: Buffer[] = []
+    const errChunks: Buffer[] = []
+    stdout.on('data', (chunk: Buffer) => outChunks.push(chunk))
+    stderr.on('data', (chunk: Buffer) => errChunks.push(chunk))
+    this.docker.modem.demuxStream(socket, stdout, stderr)
+
+    if (attachStdin) {
+      if (Buffer.isBuffer(opts.stdin)) {
+        socket.end(opts.stdin)
+      } else {
+        opts.stdin!.pipe(socket)
+      }
+    } else {
+      socket.resume()
+    }
+
+    await once(socket, 'end')
+    const info = await exec.inspect()
+    const exitCode = info.ExitCode ?? 0
+    if (exitCode !== 0) {
+      throw new ExecFailedError(
+        Buffer.concat(errChunks).toString('utf8') || `command exited with code ${exitCode}`,
+        exitCode,
+      )
+    }
+    return {
+      exitCode,
+      stdout: Buffer.concat(outChunks),
+      stderr: Buffer.concat(errChunks),
+    }
+  }
+}
+
+export class ExecFailedError extends Error {
+  readonly exitCode: number
+
+  constructor(message: string, exitCode: number) {
+    super(message)
+    this.name = 'ExecFailedError'
+    this.exitCode = exitCode
   }
 }
 

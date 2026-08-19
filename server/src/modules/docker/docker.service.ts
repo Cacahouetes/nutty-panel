@@ -1,5 +1,5 @@
 import type { ServerType } from '../servers/server-instance'
-import type { ContainerManager } from './container.manager'
+import type { ContainerManager, ExecOptions, ExecResult } from './container.manager'
 import {
   CONTAINER_MOUNT_PATH,
   CONTAINER_NAME_PREFIX,
@@ -31,6 +31,7 @@ export interface DockerService {
   getLogs(serverId: string, tail?: number): Promise<string[]>
   exportData(serverId: string): Promise<NodeJS.ReadableStream>
   importData(serverId: string, stream: NodeJS.ReadableStream): Promise<void>
+  execCommand(serverId: string, cmd: string[], opts?: ExecOptions): Promise<ExecResult>
   resolveImage(type: ServerType): string
 }
 
@@ -147,6 +148,11 @@ class DefaultDockerService implements DockerService {
   async importData(serverId: string, stream: NodeJS.ReadableStream): Promise<void> {
     const stored = this.mustFind(serverId)
     await this.deps.containerManager.putArchive(stored.ref.id, stream, CONTAINER_MOUNT_PATH)
+  }
+
+  async execCommand(serverId: string, cmd: string[], opts?: ExecOptions): Promise<ExecResult> {
+    const stored = this.mustFind(serverId)
+    return this.deps.containerManager.exec(stored.ref.id, cmd, opts)
   }
 
   resolveImage(type: ServerType): string {

@@ -61,6 +61,10 @@ class FakeDockerService implements DockerService {
 
   async importData(): Promise<void> {}
 
+  async execCommand(): Promise<{ exitCode: number; stdout: Buffer; stderr: Buffer }> {
+    return { exitCode: 0, stdout: Buffer.from(''), stderr: Buffer.from('') }
+  }
+
   resolveImage(type: ServerType): string {
     return type === 'bedrock'
       ? 'itzg/minecraft-bedrock-server:latest'

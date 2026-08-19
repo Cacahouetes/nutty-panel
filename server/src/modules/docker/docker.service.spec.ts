@@ -7,6 +7,7 @@ import {
   type DockerService,
 } from './docker.service'
 import type { ContainerManager } from './container.manager'
+import type { ExecResult } from './container.manager'
 import type { ContainerSpec, ContainerState, DockerServerInput } from './container'
 
 class FakeContainerManager implements ContainerManager {
@@ -16,6 +17,7 @@ class FakeContainerManager implements ContainerManager {
   logsByContainer = new Map<string, string[]>()
   exportedIds: string[] = []
   putArchiveCalls: { containerId: string; path: string }[] = []
+  execCalls: { containerId: string; cmd: string[] }[] = []
 
   async create(spec: ContainerSpec): Promise<string> {
     this.createdSpecs.push(spec)
@@ -66,6 +68,11 @@ class FakeContainerManager implements ContainerManager {
     path: string,
   ): Promise<void> {
     this.putArchiveCalls.push({ containerId, path })
+  }
+
+  async exec(containerId: string, cmd: string[]): Promise<ExecResult> {
+    this.execCalls.push({ containerId, cmd })
+    return { exitCode: 0, stdout: Buffer.from(''), stderr: Buffer.from('') }
   }
 }
 
@@ -226,6 +233,19 @@ describe('DockerService', () => {
 
       await service.importData(server.id, Readable.from(['data']))
       expect(fake.putArchiveCalls).toEqual([{ containerId: 'container-1', path: '/data' }])
+    })
+
+    it('runs a command inside the server container', async () => {
+      const fake = new FakeContainerManager()
+      const service = createDockerService({ containerManager: fake })
+      await service.deploy(server)
+
+      const result = await service.execCommand(server.id, ['sh', '-c', 'echo hi'], {
+        stdin: Readable.from(['in']),
+      })
+
+      expect(fake.execCalls).toEqual([{ containerId: 'container-1', cmd: ['sh', '-c', 'echo hi'] }])
+      expect(result.exitCode).toBe(0)
     })
 
     it('reports the container state through getStatus', async () => {
