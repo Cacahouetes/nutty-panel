@@ -27,5 +27,6 @@ import {
       inject: [SERVER_FILE_ACCESS],
     },
   ],
+  exports: [SERVER_FILE_ACCESS],
 })
 export class FilesModule {}
