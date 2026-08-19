@@ -67,7 +67,7 @@ maybeDescribe('DockerContainerManager (integration)', () => {
       expect(await manager.inspect(id)).toBe('running')
 
       const archive = await manager.export(id)
-      await manager.putArchive(id, archive, '/')
+      await manager.putArchive(id, archive, '/data')
       expect(await manager.inspect(id)).toBe('running')
     } finally {
       await manager.remove(id)

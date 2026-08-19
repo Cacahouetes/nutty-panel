@@ -146,7 +146,7 @@ class DefaultDockerService implements DockerService {
 
   async importData(serverId: string, stream: NodeJS.ReadableStream): Promise<void> {
     const stored = this.mustFind(serverId)
-    await this.deps.containerManager.putArchive(stored.ref.id, stream, '/')
+    await this.deps.containerManager.putArchive(stored.ref.id, stream, CONTAINER_MOUNT_PATH)
   }
 
   resolveImage(type: ServerType): string {

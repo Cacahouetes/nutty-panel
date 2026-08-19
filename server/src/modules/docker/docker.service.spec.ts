@@ -225,7 +225,7 @@ describe('DockerService', () => {
       await service.deploy(server)
 
       await service.importData(server.id, Readable.from(['data']))
-      expect(fake.putArchiveCalls).toEqual([{ containerId: 'container-1', path: '/' }])
+      expect(fake.putArchiveCalls).toEqual([{ containerId: 'container-1', path: '/data' }])
     })
 
     it('reports the container state through getStatus', async () => {
