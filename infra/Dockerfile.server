@@ -1,0 +1,20 @@
+# Build stage
+FROM node:20-alpine AS build
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-workspace.yaml ./
+COPY client/package.json client/
+COPY server/package.json server/
+RUN pnpm install --frozen-lockfile
+COPY server server
+RUN pnpm --filter @nutty-panel/server build
+
+# Production stage
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/server/dist ./dist
+COPY --from=build /app/server/package.json ./package.json
+RUN corepack enable && pnpm install --prod --frozen-lockfile
+EXPOSE 3000
+CMD ["node", "dist/main"]

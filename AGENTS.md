@@ -48,8 +48,8 @@ pnpm typecheck     # TypeScript across both projects
 
 - **Monorepo** with `pnpm` workspaces: `client/`, `server/`, `infra/`, `docs/`.
 - **TypeScript** strict mode everywhere (`tsconfig.json` with `"strict": true`).
-- **Prettier** for formatting (no semicolons, 2-space indent, single quotes).
-- **ESLint** with `@typescript-eslint` — `pnpm lint` must pass before PR.
+- **Prettier** for formatting (no semicolons, 2-space indent, single quotes) — `.prettierrc` à la racine.
+- **Linting** — `oxlint` dans `client/`, ESLint + `@typescript-eslint` dans `server/`. `pnpm lint` doit passer avant un PR.
 - **Conventional Commits** — `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, etc.
 - **TDD** — write failing tests first at agreed seams before implementation.
 - **Deep modules** — small interfaces, large implementations, testable through seams.

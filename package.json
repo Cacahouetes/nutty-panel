@@ -5,8 +5,7 @@
   "description": "Ultimate self-hosted Minecraft server panel",
   "license": "MIT",
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9"
+    "node": ">=20"
   },
   "scripts": {
     "dev": "pnpm -r dev",
@@ -21,12 +20,5 @@
     "format:write": "pnpm -r format:write",
     "clean": "pnpm -r clean"
   },
-  "pnpm": {
-    "overrides": {
-      "vue": "$vue",
-      "vue-router": "$vue-router",
-      "@tanstack/react-router": "^1.0.0"
-    }
-  },
-  "packageManager": "pnpm@9.x"
+  "packageManager": "pnpm@11.22.0"
 }
