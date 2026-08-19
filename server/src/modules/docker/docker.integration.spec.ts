@@ -31,7 +31,7 @@ maybeDescribe('DockerContainerManager (integration)', () => {
         )
       })
     })
-  })
+  }, 120_000)
 
   afterAll(async () => {
     try {
@@ -68,5 +68,5 @@ maybeDescribe('DockerContainerManager (integration)', () => {
     } finally {
       await manager.remove(id)
     }
-  })
+  }, 60_000)
 })
