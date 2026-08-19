@@ -4,5 +4,6 @@ packages:
   - "docs"
   - "infra"
 allowBuilds:
+  '@scarf/scarf': false
   esbuild: true
   unrs-resolver: true
