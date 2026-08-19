@@ -49,7 +49,7 @@ jobs:
 
       - name: Create PR for changesets
         if: steps.changesets.outputs.no-changesets != 'true'
-        uses: changesets/action@open-pr@2
+        uses: changesets/action@v1.9.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
