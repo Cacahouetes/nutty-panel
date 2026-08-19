@@ -2,58 +2,55 @@
 # Nutty Panel - Infrastructure
 
 services:
-  # Backend API + server orchestration
+  # Backend API + Docker orchestration
   api:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: infra/Dockerfile.server
     container_name: nutty-panel-api
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
-      - DATABASE_URL=file:./data/nutty-panel.db
       - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - PANEL_ADMIN_EMAIL=${PANEL_ADMIN_EMAIL:-admin@nutty.panel}
+      - PANEL_ADMIN_PASSWORD=${PANEL_ADMIN_PASSWORD}
+      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
       - ./data:/app/data
       - ./servers:/app/servers
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
-    depends_on:
-      - database
 
-  # Frontend Dashboard
+  # Frontend SPA (nginx)
   web:
     build:
-      context: ./client
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: infra/Dockerfile.client
     container_name: nutty-panel-web
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./certs:/certs:ro
-    environment:
-      - VITE_API_URL=http://localhost:3000
+    expose:
+      - "80"
     restart: unless-stopped
     depends_on:
       - api
 
-  # PostgreSQL (for production multi-user setups)
-  database:
-    image: postgres:16-alpine
-    container_name: nutty-panel-db
+  # Reverse proxy with automatic HTTPS (Caddy / Let's Encrypt)
+  caddy:
+    image: caddy:2-alpine
+    container_name: nutty-panel-caddy
+    ports:
+      - "80:80"
+      - "443:443"
     environment:
-      - POSTGRES_DB=nutty_panel
-      - POSTGRES_USER=nutty
-      - POSTGRES_PASSWORD=changeme
+      - PANEL_DOMAIN=${PANEL_DOMAIN:-:80}
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./infra/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
     restart: unless-stopped
+    depends_on:
+      - web
 
-  # Watchtower (auto-update containers)
-  watchtower:
-    image: containrrr/watchtower
-    container_name: nutty-panel-watchtower
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    command: nutty-panel-api nutty-panel-web --cleanup
-    restart: unless-stopped
+volumes:
+  caddy_data:
+  caddy_config:

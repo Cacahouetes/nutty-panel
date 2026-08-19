@@ -50,3 +50,15 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Validate shell scripts
+        run: |
+          bash -n infra/install.sh
+          bash -n infra/uninstall.sh
+          bash -n infra/test/install.test.sh
+
+      - name: Run install dry-run test
+        run: bash infra/test/install.test.sh
+
+      - name: Validate docker-compose
+        run: docker compose config --quiet

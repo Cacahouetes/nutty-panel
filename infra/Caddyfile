@@ -1,0 +1,20 @@
+# Nutty Panel - Caddy configuration
+#
+# PANEL_DOMAIN env var:
+#   - a public domain (e.g. panel.example.com) -> automatic HTTPS via Let's Encrypt
+#   - ":80" (default) -> plain HTTP on port 80, no certificate
+{$PANEL_DOMAIN:localhost} {
+	# Static SPA served by the web container (nginx)
+	reverse_proxy web:80
+
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+
+	handle /socket.io/* {
+		reverse_proxy api:3000 {
+			header_up Upgrade {http.request.header.Upgrade}
+			header_up Connection {http.request.header.Connection}
+		}
+	}
+}
