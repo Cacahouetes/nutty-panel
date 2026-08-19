@@ -31,6 +31,10 @@ class FakeContainerManager implements ContainerManager {
     this.states.set(containerId, 'stopped')
   }
 
+  async kill(containerId: string): Promise<void> {
+    this.states.set(containerId, 'stopped')
+  }
+
   async restart(containerId: string): Promise<void> {
     this.states.set(containerId, 'running')
   }
@@ -177,6 +181,16 @@ describe('DockerService', () => {
 
       await service.remove(server.id)
       expect(fake.states.get('container-1')).toBe('removed')
+    })
+
+    it('kills a deployed container and reports it stopped', async () => {
+      const fake = new FakeContainerManager()
+      const service = createDockerService({ containerManager: fake })
+      await service.deploy(server)
+
+      const killed = await service.kill(server.id)
+      expect(killed.state).toBe('stopped')
+      expect(fake.states.get('container-1')).toBe('stopped')
     })
 
     it('reports the container state through getStatus', async () => {

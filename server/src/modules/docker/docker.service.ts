@@ -24,6 +24,7 @@ export interface DockerService {
   deploy(server: DockerServerInput): Promise<Deployment>
   start(serverId: string): Promise<Deployment>
   stop(serverId: string): Promise<Deployment>
+  kill(serverId: string): Promise<Deployment>
   restart(serverId: string): Promise<Deployment>
   remove(serverId: string): Promise<void>
   getStatus(serverId: string): Promise<ContainerState>
@@ -104,6 +105,12 @@ class DefaultDockerService implements DockerService {
   async stop(serverId: string): Promise<Deployment> {
     const stored = this.mustFind(serverId)
     await this.deps.containerManager.stop(stored.ref.id)
+    return this.toDeployment(serverId)
+  }
+
+  async kill(serverId: string): Promise<Deployment> {
+    const stored = this.mustFind(serverId)
+    await this.deps.containerManager.kill(stored.ref.id)
     return this.toDeployment(serverId)
   }
 

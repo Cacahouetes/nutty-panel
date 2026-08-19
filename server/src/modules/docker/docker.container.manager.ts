@@ -41,6 +41,10 @@ export class DockerContainerManager implements ContainerManager {
     await this.docker.getContainer(containerId).stop({ t: 30 })
   }
 
+  async kill(containerId: string): Promise<void> {
+    await this.docker.getContainer(containerId).kill()
+  }
+
   async restart(containerId: string): Promise<void> {
     await this.docker.getContainer(containerId).restart({ t: 30 })
   }

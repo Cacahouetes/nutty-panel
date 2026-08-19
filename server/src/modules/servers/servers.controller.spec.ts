@@ -1,8 +1,26 @@
-import { describe, it, expect, beforeEach } from '@jest/globals'
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals'
 import { INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
+import type { ServerInstance } from './server-instance'
+import { SERVER_PROCESS_MANAGER, type ServerProcessManager } from './server-process.manager'
 import { ServersModule } from './servers.module'
+
+class InMemoryProcessManager implements ServerProcessManager {
+  private readonly running = new Set<string>()
+
+  async start(instance: ServerInstance): Promise<void> {
+    this.running.add(instance.id)
+  }
+
+  async stop(instance: ServerInstance): Promise<void> {
+    this.running.delete(instance.id)
+  }
+
+  async kill(instance: ServerInstance): Promise<void> {
+    this.running.delete(instance.id)
+  }
+}
 
 describe('ServersController (HTTP)', () => {
   let app: INestApplication
@@ -10,7 +28,10 @@ describe('ServersController (HTTP)', () => {
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [ServersModule],
-    }).compile()
+    })
+      .overrideProvider(SERVER_PROCESS_MANAGER)
+      .useValue(new InMemoryProcessManager())
+      .compile()
     app = moduleRef.createNestApplication()
     await app.init()
   })
