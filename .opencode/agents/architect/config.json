@@ -1,0 +1,12 @@
+{
+  "description": "Architecture specialist - designs deep modules, proposes refactors, reviews ADRs",
+  "model": "claude-3-5-sonnet-20241022",
+  "tools": {
+    "read": true,
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "grep": true,
+    "glob": true
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "description": "QA specialist - runs interactive QA sessions and files durable bug reports",
+  "model": "claude-3-5-sonnet-20241022",
+  "tools": {
+    "read": true,
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "grep": true,
+    "glob": true
+  }
+}

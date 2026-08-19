@@ -1,0 +1,59 @@
+---
+# Nutty Panel - Infrastructure
+
+services:
+  # Backend API + server orchestration
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: nutty-panel-api
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:./data/nutty-panel.db
+      - NODE_ENV=production
+    volumes:
+      - ./data:/app/data
+      - ./servers:/app/servers
+    restart: unless-stopped
+    depends_on:
+      - database
+
+  # Frontend Dashboard
+  web:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: nutty-panel-web
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certs:/certs:ro
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  # PostgreSQL (for production multi-user setups)
+  database:
+    image: postgres:16-alpine
+    container_name: nutty-panel-db
+    environment:
+      - POSTGRES_DB=nutty_panel
+      - POSTGRES_USER=nutty
+      - POSTGRES_PASSWORD=changeme
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # Watchtower (auto-update containers)
+  watchtower:
+    image: containrrr/watchtower
+    container_name: nutty-panel-watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: nutty-panel-api nutty-panel-web --cleanup
+    restart: unless-stopped

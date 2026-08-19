@@ -1,0 +1,3 @@
+interface:
+  display_name: "QA Session"
+  short_description: "Interactive QA → github issues"

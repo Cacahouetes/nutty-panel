@@ -1,0 +1,46 @@
+{
+  "skills": {
+    "issueTracker": {
+      "type": "github",
+      "repo": "Cacahouetes/nutty-panel",
+      "url": "https://github.com/Cacahouetes/nutty-panel/issues"
+    },
+    "triageLabels": {
+      "new": "status: new",
+      "assigned": "status: assigned",
+      "inProgress": "status: in-progress",
+      "review": "status: review",
+      "done": "status: done"
+    },
+    "domainDocs": {
+      "contextPath": "docs/agents/CONTEXT.md",
+      "adrPath": "docs/adr/"
+    }
+  },
+  "agents": {
+    "skills": [
+      "find-skills",
+      "setup-matt-pocock-skills",
+      "code-review",
+      "tdd",
+      "implement",
+      "to-prd",
+      "codebase-design",
+      "improve-codebase-architecture",
+      "qa",
+      "vercel-react-best-practices",
+      "domain-modeling"
+    ]
+  },
+  "mcp": [],
+  "permissions": {
+    "allow": [
+      "bash",
+      "read",
+      "write",
+      "edit",
+      "glob",
+      "grep"
+    ]
+  }
+}

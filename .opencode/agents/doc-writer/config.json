@@ -1,0 +1,12 @@
+{
+  "description": "Documentation specialist - writes user guides, API references, and ADRs",
+  "model": "claude-3-5-sonnet-20241022",
+  "tools": {
+    "read": true,
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "grep": true,
+    "glob": true
+  }
+}

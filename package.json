@@ -1,0 +1,32 @@
+{
+  "name": "nutty-panel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ultimate self-hosted Minecraft server panel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:unit": "pnpm -r test:unit",
+    "test:watch": "pnpm -r test:watch",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
+    "format": "pnpm -r format",
+    "format:write": "pnpm -r format:write",
+    "clean": "pnpm -r clean"
+  },
+  "pnpm": {
+    "overrides": {
+      "vue": "$vue",
+      "vue-router": "$vue-router",
+      "@tanstack/react-router": "^1.0.0"
+    }
+  },
+  "packageManager": "pnpm@9.x"
+}

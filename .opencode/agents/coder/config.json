@@ -1,0 +1,12 @@
+{
+  "description": "Implementation specialist using TDD workflow - writes failing tests first, implements, then reviews",
+  "model": "claude-3-5-sonnet-20241022",
+  "tools": {
+    "read": true,
+    "write": true,
+    "edit": true,
+    "bash": true,
+    "grep": true,
+    "glob": true
+  }
+}

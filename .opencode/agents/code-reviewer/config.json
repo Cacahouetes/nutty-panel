@@ -1,0 +1,12 @@
+{
+  "description": "Code review specialist using two-axis review (standards + spec) from the code-review skill",
+  "model": "claude-3-5-sonnet-20241022",
+  "tools": {
+    "read": true,
+    "write": false,
+    "edit": false,
+    "bash": true,
+    "grep": true,
+    "glob": true
+  }
+}
