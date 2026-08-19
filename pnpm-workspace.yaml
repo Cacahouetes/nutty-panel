@@ -6,5 +6,8 @@ packages:
 allowBuilds:
   '@scarf/scarf': false
   argon2: true
+  cpu-features: false
   esbuild: true
+  protobufjs: false
+  ssh2: false
   unrs-resolver: true
