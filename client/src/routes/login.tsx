@@ -1,35 +1,84 @@
+import { useState, type FormEvent } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/lib/auth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+
+interface LoginLocationState {
+  from?: { pathname?: string }
+}
+
 export function LoginPage() {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  const from = (location.state as LoginLocationState | null)?.from?.pathname ?? '/'
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault()
+    setError(null)
+    setSubmitting(true)
+    try {
+      await login(email, password)
+      navigate(from, { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Connexion impossible')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <form className="w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 p-8">
-        <h1 className="mb-6 text-center text-2xl font-bold text-slate-100">
-          Connexion
-        </h1>
-        <label className="mb-2 block text-sm text-slate-400" htmlFor="email">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          className="mb-4 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100"
-          placeholder="admin@example.com"
-        />
-        <label className="mb-2 block text-sm text-slate-400" htmlFor="password">
-          Mot de passe
-        </label>
-        <input
-          id="password"
-          type="password"
-          className="mb-6 w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-slate-100"
-          placeholder="••••••••"
-        />
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-emerald-600 py-2 font-medium text-white transition hover:bg-emerald-500"
-        >
-          Se connecter
-        </button>
-      </form>
+    <main className="flex min-h-screen items-center justify-center p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-center">Nutty Panel</CardTitle>
+          <CardDescription className="text-center">Connexion</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
+                autoComplete="email"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Mot de passe</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+            {error ? (
+              <p role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            ) : null}
+            <Button type="submit" className="w-full" disabled={submitting}>
+              {submitting ? 'Connexion…' : 'Se connecter'}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </main>
   )
 }
