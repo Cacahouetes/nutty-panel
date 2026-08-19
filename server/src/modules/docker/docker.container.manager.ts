@@ -65,6 +65,18 @@ export class DockerContainerManager implements ContainerManager {
     const text = demuxLogBuffer(buffer)
     return text.split(/\r?\n/).filter((line) => line.length > 0)
   }
+
+  async export(containerId: string): Promise<NodeJS.ReadableStream> {
+    return this.docker.getContainer(containerId).export()
+  }
+
+  async putArchive(
+    containerId: string,
+    stream: NodeJS.ReadableStream,
+    path: string,
+  ): Promise<void> {
+    await this.docker.getContainer(containerId).putArchive(stream, { path })
+  }
 }
 
 function mapDockerState(status: string): ContainerState {

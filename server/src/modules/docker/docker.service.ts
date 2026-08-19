@@ -29,6 +29,8 @@ export interface DockerService {
   remove(serverId: string): Promise<void>
   getStatus(serverId: string): Promise<ContainerState>
   getLogs(serverId: string, tail?: number): Promise<string[]>
+  exportData(serverId: string): Promise<NodeJS.ReadableStream>
+  importData(serverId: string, stream: NodeJS.ReadableStream): Promise<void>
   resolveImage(type: ServerType): string
 }
 
@@ -135,6 +137,16 @@ class DefaultDockerService implements DockerService {
   async getLogs(serverId: string, tail?: number): Promise<string[]> {
     const stored = this.mustFind(serverId)
     return this.deps.containerManager.logs(stored.ref.id, tail)
+  }
+
+  async exportData(serverId: string): Promise<NodeJS.ReadableStream> {
+    const stored = this.mustFind(serverId)
+    return this.deps.containerManager.export(stored.ref.id)
+  }
+
+  async importData(serverId: string, stream: NodeJS.ReadableStream): Promise<void> {
+    const stored = this.mustFind(serverId)
+    await this.deps.containerManager.putArchive(stored.ref.id, stream, '/')
   }
 
   resolveImage(type: ServerType): string {

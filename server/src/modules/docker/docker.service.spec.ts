@@ -1,4 +1,5 @@
 import { describe, it, expect } from '@jest/globals'
+import { Readable } from 'node:stream'
 import {
   ConflictError,
   NotFoundError,
@@ -13,6 +14,8 @@ class FakeContainerManager implements ContainerManager {
   startedIds: string[] = []
   states = new Map<string, ContainerState>()
   logsByContainer = new Map<string, string[]>()
+  exportedIds: string[] = []
+  putArchiveCalls: { containerId: string; path: string }[] = []
 
   async create(spec: ContainerSpec): Promise<string> {
     this.createdSpecs.push(spec)
@@ -50,6 +53,19 @@ class FakeContainerManager implements ContainerManager {
   async logs(containerId: string, tail?: number): Promise<string[]> {
     const all = this.logsByContainer.get(containerId) ?? []
     return tail ? all.slice(-tail) : all
+  }
+
+  async export(containerId: string): Promise<NodeJS.ReadableStream> {
+    this.exportedIds.push(containerId)
+    return Readable.from([`data-for-${containerId}`])
+  }
+
+  async putArchive(
+    containerId: string,
+    stream: NodeJS.ReadableStream,
+    path: string,
+  ): Promise<void> {
+    this.putArchiveCalls.push({ containerId, path })
   }
 }
 
@@ -191,6 +207,25 @@ describe('DockerService', () => {
       const killed = await service.kill(server.id)
       expect(killed.state).toBe('stopped')
       expect(fake.states.get('container-1')).toBe('stopped')
+    })
+
+    it('exports the server data stream through the container manager', async () => {
+      const fake = new FakeContainerManager()
+      const service = createDockerService({ containerManager: fake })
+      await service.deploy(server)
+
+      const stream = await service.exportData(server.id)
+      expect(stream).toBeInstanceOf(Readable)
+      expect(fake.exportedIds).toEqual(['container-1'])
+    })
+
+    it('imports a data stream into the server container', async () => {
+      const fake = new FakeContainerManager()
+      const service = createDockerService({ containerManager: fake })
+      await service.deploy(server)
+
+      await service.importData(server.id, Readable.from(['data']))
+      expect(fake.putArchiveCalls).toEqual([{ containerId: 'container-1', path: '/' }])
     })
 
     it('reports the container state through getStatus', async () => {

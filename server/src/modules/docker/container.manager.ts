@@ -9,6 +9,8 @@ export interface ContainerManager {
   remove(containerId: string): Promise<void>
   inspect(containerId: string): Promise<ContainerState>
   logs(containerId: string, tail?: number): Promise<string[]>
+  export(containerId: string): Promise<NodeJS.ReadableStream>
+  putArchive(containerId: string, stream: NodeJS.ReadableStream, path: string): Promise<void>
 }
 
 export const CONTAINER_MANAGER = Symbol('ContainerManager')

@@ -1,4 +1,5 @@
 import { describe, it, expect } from '@jest/globals'
+import { Readable } from 'node:stream'
 import type { ServerType } from './server-instance'
 import type { ServerInstance } from './server-instance'
 import type { ContainerState, DockerServerInput } from '../docker/container'
@@ -53,6 +54,12 @@ class FakeDockerService implements DockerService {
   async getLogs(): Promise<string[]> {
     return []
   }
+
+  async exportData(): Promise<NodeJS.ReadableStream> {
+    return Readable.from([])
+  }
+
+  async importData(): Promise<void> {}
 
   resolveImage(type: ServerType): string {
     return type === 'bedrock'
