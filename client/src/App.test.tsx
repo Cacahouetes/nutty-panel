@@ -76,8 +76,8 @@ describe('App', () => {
     renderApp(['/'])
 
     await waitFor(() => expect(screen.getByText('Survie')).toBeInTheDocument())
-    expect(screen.getByRole('heading', { name: 'Serveurs' })).toBeInTheDocument()
-    expect(screen.getByText('En ligne')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tableau de bord' })).toBeInTheDocument()
+    expect(screen.getAllByText('En ligne').length).toBeGreaterThan(0)
   })
 
   it('redirects an anonymous visitor to the login page', async () => {

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { DashboardPage } from '@/routes/dashboard'
 import type { ServerInstance } from '@/lib/types'
@@ -33,9 +34,11 @@ function renderDashboard() {
     defaultOptions: { queries: { retry: false } },
   })
   return render(
-    <QueryClientProvider client={queryClient}>
-      <DashboardPage />
-    </QueryClientProvider>,
+    <MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <DashboardPage />
+      </QueryClientProvider>
+    </MemoryRouter>,
   )
 }
 
@@ -43,6 +46,7 @@ describe('DashboardPage', () => {
   const fetchMock = vi.fn()
 
   beforeEach(() => {
+    fetchMock.mockResolvedValue(jsonResponse({ message: 'not found' }, 404))
     vi.stubGlobal('fetch', fetchMock)
   })
 
@@ -50,66 +54,35 @@ describe('DashboardPage', () => {
     vi.unstubAllGlobals()
   })
 
-  it('lists the servers with their status', async () => {
-    fetchMock.mockResolvedValue(jsonResponse([makeServer()]))
+  it('shows overview stats and the servers list', async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse([makeServer(), makeServer({ id: 's2', name: 'Minijeu', status: 'stopped' })]),
+    )
 
     renderDashboard()
 
     await waitFor(() => expect(screen.getByText('Survie')).toBeInTheDocument())
-    expect(screen.getByText('En ligne')).toBeInTheDocument()
-    expect(screen.getByText('Port 25565')).toBeInTheDocument()
+    expect(screen.getByText('Minijeu')).toBeInTheDocument()
+    expect(screen.getAllByText('En ligne').length).toBeGreaterThan(0)
+    expect(screen.getByText('Arrêtés')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /gérer les serveurs/i })).toHaveAttribute(
+      'href',
+      '/servers',
+    )
   })
 
-  it('shows an empty state when there are no servers', async () => {
-    fetchMock.mockResolvedValue(jsonResponse([]))
+  it('shows an empty state linking to the servers page', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse([]))
 
     renderDashboard()
 
     await waitFor(() =>
       expect(screen.getByText('Aucun serveur pour le moment.')).toBeInTheDocument(),
     )
-  })
-
-  it('starts a stopped server', async () => {
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse([makeServer({ status: 'stopped' })]))
-      .mockResolvedValueOnce(jsonResponse(makeServer({ status: 'running' })))
-      .mockResolvedValueOnce(jsonResponse([makeServer({ status: 'running' })]))
-
-    renderDashboard()
-
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /démarrer/i })).toBeInTheDocument(),
+    expect(screen.getByRole('link', { name: /créer un serveur/i })).toHaveAttribute(
+      'href',
+      '/servers',
     )
-    fireEvent.click(screen.getByRole('button', { name: /démarrer/i }))
-
-    await waitFor(() => {
-      const startCall = fetchMock.mock.calls.find(([url]) =>
-        String(url).endsWith('/api/servers/s1/start'),
-      )
-      expect(startCall).toBeDefined()
-    })
-  })
-
-  it('stops a running server', async () => {
-    fetchMock
-      .mockResolvedValueOnce(jsonResponse([makeServer()]))
-      .mockResolvedValueOnce(jsonResponse(makeServer({ status: 'stopped' })))
-      .mockResolvedValueOnce(jsonResponse([makeServer({ status: 'stopped' })]))
-
-    renderDashboard()
-
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: /arrêter/i })).toBeInTheDocument(),
-    )
-    fireEvent.click(screen.getByRole('button', { name: /arrêter/i }))
-
-    await waitFor(() => {
-      const stopCall = fetchMock.mock.calls.find(([url]) =>
-        String(url).endsWith('/api/servers/s1/stop'),
-      )
-      expect(stopCall).toBeDefined()
-    })
   })
 
   it('shows an error state with a retry button', async () => {
@@ -120,6 +93,7 @@ describe('DashboardPage', () => {
     await waitFor(() =>
       expect(screen.getByText('Erreur de chargement')).toBeInTheDocument(),
     )
-    expect(screen.getByRole('button', { name: /réessayer/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /réessayer/i }))
+    await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(1))
   })
 })

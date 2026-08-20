@@ -18,7 +18,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/', label: 'Serveurs', icon: Rocket, soon: true },
+  { to: '/servers', label: 'Serveurs', icon: Rocket },
   { label: 'Fichiers', icon: Boxes, soon: true },
   { label: 'Sauvegardes', icon: Archive, soon: true },
   { label: 'Intégrations', icon: Puzzle, soon: true },

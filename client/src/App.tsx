@@ -4,6 +4,7 @@ import { RequireAuth } from '@/components/auth/require-auth'
 import { DashboardPage } from '@/routes/dashboard'
 import { LoginPage } from '@/routes/login'
 import { NotFoundPage } from '@/routes/not-found'
+import { ServersPage } from '@/routes/servers'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         }
       >
         <Route index element={<DashboardPage />} />
+        <Route path="servers" element={<ServersPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
