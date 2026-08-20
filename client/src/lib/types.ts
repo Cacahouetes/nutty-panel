@@ -96,3 +96,56 @@ export interface BackupPolicy {
   intervalMinutes: number
   maxBackups: number
 }
+
+export type ModProviderName = 'modrinth' | 'curseforge'
+
+export type ModType = 'mod' | 'plugin' | 'datapack' | 'resourcepack' | 'modpack'
+
+export interface ModSearchResult {
+  projectId: string
+  provider: ModProviderName
+  name: string
+  description?: string
+  type: string
+  downloads?: number
+}
+
+export interface InstalledMod {
+  id: string
+  serverId: string
+  provider: ModProviderName
+  projectId: string
+  projectName: string
+  versionId: string
+  fileName: string
+  targetPath: string
+  installedAt: string
+}
+
+export interface InstallModInput {
+  provider: ModProviderName
+  projectId: string
+  type?: ModType
+  gameVersion?: string
+  loader?: string
+}
+
+export type PlayitAgentStatus = 'running' | 'stopped' | 'error' | 'disabled'
+
+export interface PlayitStatus {
+  agent: PlayitAgentStatus
+  tunnels: number
+}
+
+export const MOD_PROVIDER_LABELS: Record<ModProviderName, string> = {
+  modrinth: 'Modrinth',
+  curseforge: 'CurseForge',
+}
+
+export const MOD_TYPE_LABELS: Record<ModType, string> = {
+  mod: 'Mod',
+  plugin: 'Plugin',
+  datapack: 'Datapack',
+  resourcepack: 'Resourcepack',
+  modpack: 'Modpack',
+}

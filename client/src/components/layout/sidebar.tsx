@@ -21,7 +21,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/servers', label: 'Serveurs', icon: Rocket },
   { to: '/files', label: 'Fichiers', icon: Boxes },
   { to: '/backups', label: 'Sauvegardes', icon: Archive },
-  { label: 'Intégrations', icon: Puzzle, soon: true },
+  { to: '/integrations', label: 'Intégrations', icon: Puzzle },
   { label: 'Réglages', icon: Settings, soon: true },
 ]
 

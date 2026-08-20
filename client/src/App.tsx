@@ -4,6 +4,7 @@ import { RequireAuth } from '@/components/auth/require-auth'
 import { BackupsPage } from '@/routes/backups'
 import { DashboardPage } from '@/routes/dashboard'
 import { FilesPage } from '@/routes/files'
+import { IntegrationsPage } from '@/routes/integrations'
 import { LoginPage } from '@/routes/login'
 import { NotFoundPage } from '@/routes/not-found'
 import { ServersPage } from '@/routes/servers'
@@ -24,6 +25,7 @@ function App() {
         <Route path="servers" element={<ServersPage />} />
         <Route path="files" element={<FilesPage />} />
         <Route path="backups" element={<BackupsPage />} />
+        <Route path="integrations" element={<IntegrationsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
