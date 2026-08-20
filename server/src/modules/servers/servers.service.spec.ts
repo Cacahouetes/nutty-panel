@@ -6,6 +6,8 @@ import {
   createServersService,
   type ServersService,
 } from './servers.service'
+import type { EventBus } from '../events/event-bus'
+import type { AppEvent } from '../events/event'
 import { InMemoryServersRepository } from './in-memory.servers.repository'
 import type { ServerInstance, ServerType } from './server-instance'
 import type { MinecraftVersionProvider } from './minecraft-version.provider'
@@ -46,6 +48,30 @@ function buildService(): {
   const processes = new StubProcessManager()
   const service = createServersService({ repository, versions, processes })
   return { service, processes }
+}
+
+class RecordingEventBus implements EventBus {
+  readonly emitted: AppEvent[] = []
+
+  emit(event: AppEvent): void {
+    this.emitted.push(event)
+  }
+
+  subscribe(): () => void {
+    return () => {}
+  }
+}
+
+function buildServiceWithEvents(): {
+  service: ServersService
+  events: RecordingEventBus
+} {
+  const repository = new InMemoryServersRepository()
+  const versions = new StubVersionProvider()
+  const processes = new StubProcessManager()
+  const events = new RecordingEventBus()
+  const service = createServersService({ repository, versions, processes, events })
+  return { service, events }
 }
 
 function validInput() {
@@ -312,6 +338,64 @@ describe('ServersService', () => {
       const created = await createInstance(service)
 
       await expect(service.kill(created.id)).rejects.toThrow(ConflictError)
+    })
+  })
+
+  describe('events', () => {
+    it('emits server.created with the instance payload', async () => {
+      const { service, events } = buildServiceWithEvents()
+
+      const created = await service.create(validInput())
+
+      expect(events.emitted).toEqual([
+        expect.objectContaining({
+          type: 'server.created',
+          data: { serverId: created.id, name: created.name },
+        }),
+      ])
+    })
+
+    it('emits server.started on start', async () => {
+      const { service, events } = buildServiceWithEvents()
+      const created = await service.create(validInput())
+
+      await service.start(created.id)
+
+      expect(events.emitted).toContainEqual(
+        expect.objectContaining({
+          type: 'server.started',
+          data: { serverId: created.id, name: created.name },
+        }),
+      )
+    })
+
+    it('emits server.stopped on stop', async () => {
+      const { service, events } = buildServiceWithEvents()
+      const created = await service.create(validInput())
+      await service.start(created.id)
+
+      await service.stop(created.id)
+
+      expect(events.emitted).toContainEqual(
+        expect.objectContaining({
+          type: 'server.stopped',
+          data: { serverId: created.id, name: created.name },
+        }),
+      )
+    })
+
+    it('emits server.removed on remove', async () => {
+      const { service, events } = buildServiceWithEvents()
+      const created = await service.create(validInput())
+
+      await service.remove(created.id)
+
+      expect(events.emitted).toContainEqual(
+        expect.objectContaining({
+          type: 'server.removed',
+          data: { serverId: created.id, name: created.name },
+        }),
+      )
     })
   })
 })

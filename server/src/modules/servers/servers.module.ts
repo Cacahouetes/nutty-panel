@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common'
 import { DOCKER_SERVICE, type DockerService } from '../docker/docker.service'
 import { DockerModule } from '../docker/docker.module'
+import { EVENT_BUS, type EventBus } from '../events/event-bus'
+import { EventsModule } from '../events/events.module'
 import { DockerServerProcessManager } from './docker-server-process.manager'
 import { InMemoryServersRepository } from './in-memory.servers.repository'
 import {
@@ -14,7 +16,7 @@ import { ServersController } from './servers.controller'
 import { StaticMinecraftVersionProvider } from './static-minecraft-version.provider'
 
 @Module({
-  imports: [DockerModule],
+  imports: [DockerModule, EventsModule],
   controllers: [ServersController],
   providers: [
     {
@@ -36,8 +38,9 @@ import { StaticMinecraftVersionProvider } from './static-minecraft-version.provi
         repository: ServersRepository,
         versions: MinecraftVersionProvider,
         processes: ServerProcessManager,
-      ) => createServersService({ repository, versions, processes }),
-      inject: [SERVERS_REPOSITORY, MINECRAFT_VERSION_PROVIDER, SERVER_PROCESS_MANAGER],
+        events: EventBus,
+      ) => createServersService({ repository, versions, processes, events }),
+      inject: [SERVERS_REPOSITORY, MINECRAFT_VERSION_PROVIDER, SERVER_PROCESS_MANAGER, EVENT_BUS],
     },
   ],
   exports: [SERVERS_SERVICE],

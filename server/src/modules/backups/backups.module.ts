@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common'
 import { join } from 'node:path'
 import { DockerModule } from '../docker/docker.module'
 import { DOCKER_SERVICE, type DockerService } from '../docker/docker.service'
+import { EVENT_BUS, type EventBus } from '../events/event-bus'
+import { EventsModule } from '../events/events.module'
 import { ARCHIVE_STORE, type ArchiveStore } from './archive.store'
 import { BACKUP_POLICY_STORE, type BackupPolicyStore } from './backup-policy.store'
 import { BACKUP_SCHEDULER, createBackupScheduler } from './backup.scheduler'
@@ -18,7 +20,7 @@ import { SERVER_DATA_ACCESS, type ServerDataAccess } from './server-data'
 const BACKUPS_DIR = process.env.BACKUPS_DIR ?? join(process.cwd(), 'data', 'backups')
 
 @Module({
-  imports: [DockerModule],
+  imports: [DockerModule, EventsModule],
   controllers: [BackupsController],
   providers: [
     { provide: BACKUPS_REPOSITORY, useClass: InMemoryBackupsRepository },
@@ -35,8 +37,9 @@ const BACKUPS_DIR = process.env.BACKUPS_DIR ?? join(process.cwd(), 'data', 'back
         repository: BackupsRepository,
         archiveStore: ArchiveStore,
         serverData: ServerDataAccess,
-      ) => createBackupsService({ repository, archiveStore, serverData }),
-      inject: [BACKUPS_REPOSITORY, ARCHIVE_STORE, SERVER_DATA_ACCESS],
+        events: EventBus,
+      ) => createBackupsService({ repository, archiveStore, serverData, events }),
+      inject: [BACKUPS_REPOSITORY, ARCHIVE_STORE, SERVER_DATA_ACCESS, EVENT_BUS],
     },
     {
       provide: BACKUP_SCHEDULER,

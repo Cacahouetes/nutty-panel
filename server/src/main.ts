@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle('Nutty Panel API')
     .setDescription('API du panel Nutty Panel pour la gestion de serveurs Minecraft')
     .setVersion('0.1.0')
+    .addBearerAuth()
     .build()
   const document = SwaggerModule.createDocument(app, config)
   SwaggerModule.setup('api/docs', app, document)

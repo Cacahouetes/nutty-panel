@@ -5,6 +5,8 @@ import type { Backup } from './backup'
 import type { BackupsRepository } from './backups.repository'
 import type { ArchiveStore } from './archive.store'
 import type { ServerDataAccess } from './server-data'
+import type { EventBus } from '../events/event-bus'
+import type { AppEvent } from '../events/event'
 
 class FakeBackupsRepository implements BackupsRepository {
   backups: Backup[] = []
@@ -84,6 +86,30 @@ function buildService(): {
   const serverData = new FakeServerData()
   const service = createBackupsService({ repository, archiveStore, serverData })
   return { service, repository, archiveStore, serverData }
+}
+
+class RecordingEventBus implements EventBus {
+  readonly emitted: AppEvent[] = []
+
+  emit(event: AppEvent): void {
+    this.emitted.push(event)
+  }
+
+  subscribe(): () => void {
+    return () => {}
+  }
+}
+
+function buildServiceWithEvents(): {
+  service: BackupsService
+  events: RecordingEventBus
+} {
+  const repository = new FakeBackupsRepository()
+  const archiveStore = new FakeArchiveStore()
+  const serverData = new FakeServerData()
+  const events = new RecordingEventBus()
+  const service = createBackupsService({ repository, archiveStore, serverData, events })
+  return { service, events }
 }
 
 describe('BackupsService', () => {
@@ -172,5 +198,47 @@ describe('BackupsService', () => {
 
     expect(await repository.listByServer('server-1')).toHaveLength(3)
     expect(archiveStore.deleted).toEqual(['archive-1', 'archive-2'])
+  })
+
+  describe('events', () => {
+    it('emits backup.completed with the backup payload', async () => {
+      const { service, events } = buildServiceWithEvents()
+
+      const backup = await service.createBackup('server-1')
+
+      expect(events.emitted).toContainEqual(
+        expect.objectContaining({
+          type: 'backup.completed',
+          data: { backupId: backup.id, serverId: 'server-1', sizeBytes: backup.sizeBytes },
+        }),
+      )
+    })
+
+    it('emits backup.failed and rethrows when export fails', async () => {
+      const repository = new FakeBackupsRepository()
+      const archiveStore = new FakeArchiveStore()
+      const failingServerData: ServerDataAccess = {
+        async exportData(): Promise<NodeJS.ReadableStream> {
+          throw new Error('export exploded')
+        },
+        async importData(): Promise<void> {},
+      }
+      const events = new RecordingEventBus()
+      const service = createBackupsService({
+        repository,
+        archiveStore,
+        serverData: failingServerData,
+        events,
+      })
+
+      await expect(service.createBackup('server-1')).rejects.toThrow('export exploded')
+
+      expect(events.emitted).toContainEqual(
+        expect.objectContaining({
+          type: 'backup.failed',
+          data: { backupId: expect.any(String), serverId: 'server-1', error: 'export exploded' },
+        }),
+      )
+    })
   })
 })

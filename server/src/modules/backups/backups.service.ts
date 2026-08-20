@@ -3,6 +3,8 @@ import { DEFAULT_MAX_BACKUPS, type Backup } from './backup'
 import type { ArchiveStore } from './archive.store'
 import type { BackupsRepository } from './backups.repository'
 import type { ServerDataAccess } from './server-data'
+import type { EventBus } from '../events/event-bus'
+import type { AppEvent } from '../events/event'
 
 export class NotFoundError extends Error {
   constructor(message: string) {
@@ -22,6 +24,7 @@ export interface BackupsServiceDeps {
   repository: BackupsRepository
   archiveStore: ArchiveStore
   serverData: ServerDataAccess
+  events?: EventBus
 }
 
 export interface BackupsService {
@@ -41,19 +44,41 @@ export function createBackupsService(deps: BackupsServiceDeps): BackupsService {
 class DefaultBackupsService implements BackupsService {
   constructor(private readonly deps: BackupsServiceDeps) {}
 
+  private emit(event: AppEvent): void {
+    this.deps.events?.emit(event)
+  }
+
   async createBackup(serverId: string, maxBackups = DEFAULT_MAX_BACKUPS): Promise<Backup> {
-    const source = await this.deps.serverData.exportData(serverId)
-    const stored = await this.deps.archiveStore.saveArchive(serverId, source)
-    const backup: Backup = {
-      id: randomUUID(),
-      serverId,
-      createdAt: new Date(),
-      sizeBytes: stored.sizeBytes,
-      archiveKey: stored.key,
+    try {
+      const source = await this.deps.serverData.exportData(serverId)
+      const stored = await this.deps.archiveStore.saveArchive(serverId, source)
+      const backup: Backup = {
+        id: randomUUID(),
+        serverId,
+        createdAt: new Date(),
+        sizeBytes: stored.sizeBytes,
+        archiveKey: stored.key,
+      }
+      const saved = await this.deps.repository.save(backup)
+      await this.applyRetention(serverId, maxBackups)
+      this.emit({
+        type: 'backup.completed',
+        occurredAt: new Date(),
+        data: { backupId: saved.id, serverId: saved.serverId, sizeBytes: saved.sizeBytes },
+      })
+      return saved
+    } catch (err) {
+      this.emit({
+        type: 'backup.failed',
+        occurredAt: new Date(),
+        data: {
+          backupId: randomUUID(),
+          serverId,
+          error: err instanceof Error ? err.message : String(err),
+        },
+      })
+      throw err
     }
-    const saved = await this.deps.repository.save(backup)
-    await this.applyRetention(serverId, maxBackups)
-    return saved
   }
 
   async listBackups(serverId: string): Promise<Backup[]> {

@@ -68,6 +68,6 @@ class AdminBootstrapInit implements OnModuleInit {
     JwtAuthGuard,
     RolesGuard,
   ],
-  exports: [AUTH_SERVICE, JwtAuthGuard, RolesGuard],
+  exports: [AUTH_SERVICE, TOKEN_SERVICE, JwtAuthGuard, RolesGuard],
 })
 export class AuthModule {}

@@ -13,6 +13,8 @@ import {
 import type { MinecraftVersionProvider } from './minecraft-version.provider'
 import type { ServerProcessManager } from './server-process.manager'
 import type { ServersRepository } from './servers.repository'
+import type { EventBus } from '../events/event-bus'
+import type { AppEvent } from '../events/event'
 
 export interface CreateServerInput {
   name: string
@@ -68,6 +70,7 @@ export interface ServersServiceDeps {
   repository: ServersRepository
   versions: MinecraftVersionProvider
   processes: ServerProcessManager
+  events?: EventBus
 }
 
 export function createServersService(deps: ServersServiceDeps): ServersService {
@@ -78,6 +81,10 @@ const ACTIVE_STATUSES: readonly ServerStatus[] = ['starting', 'running', 'stoppi
 
 class DefaultServersService implements ServersService {
   constructor(private readonly deps: ServersServiceDeps) {}
+
+  private emit(event: AppEvent): void {
+    this.deps.events?.emit(event)
+  }
 
   async create(input: CreateServerInput): Promise<ServerInstance> {
     if (!input.name || !input.name.trim()) {
@@ -119,7 +126,13 @@ class DefaultServersService implements ServersService {
       createdAt: now,
       updatedAt: now,
     }
-    return this.deps.repository.create(instance)
+    const created = await this.deps.repository.create(instance)
+    this.emit({
+      type: 'server.created',
+      occurredAt: now,
+      data: { serverId: created.id, name: created.name },
+    })
+    return created
   }
 
   async findAll(): Promise<ServerInstance[]> {
@@ -146,8 +159,13 @@ class DefaultServersService implements ServersService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.mustFind(id)
+    const instance = await this.mustFind(id)
     await this.deps.repository.remove(id)
+    this.emit({
+      type: 'server.removed',
+      occurredAt: new Date(),
+      data: { serverId: instance.id, name: instance.name },
+    })
   }
 
   async start(id: string): Promise<ServerInstance> {
@@ -158,7 +176,13 @@ class DefaultServersService implements ServersService {
     const starting = await this.persist({ ...instance, status: 'starting' })
     try {
       await this.deps.processes.start(starting)
-      return this.persist({ ...starting, status: 'running' })
+      const running = await this.persist({ ...starting, status: 'running' })
+      this.emit({
+        type: 'server.started',
+        occurredAt: new Date(),
+        data: { serverId: running.id, name: running.name },
+      })
+      return running
     } catch (err) {
       await this.persist({
         ...starting,
@@ -177,7 +201,13 @@ class DefaultServersService implements ServersService {
     const stopping = await this.persist({ ...instance, status: 'stopping' })
     try {
       await this.deps.processes.stop(stopping)
-      return this.persist({ ...stopping, status: 'stopped' })
+      const stopped = await this.persist({ ...stopping, status: 'stopped' })
+      this.emit({
+        type: 'server.stopped',
+        occurredAt: new Date(),
+        data: { serverId: stopped.id, name: stopped.name },
+      })
+      return stopped
     } catch (err) {
       await this.persist({
         ...stopping,
