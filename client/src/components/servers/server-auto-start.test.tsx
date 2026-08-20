@@ -69,7 +69,7 @@ describe('ServerAutoStart', () => {
         return String(requestInit?.method).toUpperCase() === 'PUT'
       })
       expect(putCall).toBeDefined()
-      const requestInit = putCall[1] as RequestInit
+      const requestInit = putCall?.[1] as RequestInit
       expect(JSON.parse(String(requestInit.body))).toEqual({
         enabled: false,
         inactiveMinutes: 45,
