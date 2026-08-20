@@ -1,4 +1,4 @@
-import { Inject, Injectable, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
+import { Inject, Injectable, Logger, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common'
 import { AuthModule } from '../auth/auth.module'
 import { SERVERS_SERVICE, type ServersService } from '../servers/servers.service'
 import { ServersModule } from '../servers/servers.module'
@@ -22,11 +22,22 @@ class ProxyModuleInit implements OnModuleInit, OnModuleDestroy {
   constructor(@Inject(PROXY_SERVICE) private readonly service: SmartProxyService) {}
 
   async onModuleInit(): Promise<void> {
-    await this.service.start()
+    try {
+      await this.service.start()
+    } catch (err) {
+      Logger.warn(
+        `Smart Proxy could not start (${(err as Error).message}) — the panel continues without it.`,
+        ProxyModuleInit.name,
+      )
+    }
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.service.stop()
+    try {
+      await this.service.stop()
+    } catch {
+      Logger.debug('Smart Proxy already stopped.', ProxyModuleInit.name)
+    }
   }
 }
 
