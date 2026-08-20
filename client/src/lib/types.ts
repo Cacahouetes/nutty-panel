@@ -23,3 +23,10 @@ export interface MetricsSnapshot {
   memoryPercent: number
   readAt: string
 }
+
+export interface AutoStartPolicy {
+  serverId: string
+  enabled: boolean
+  inactiveMinutes: number
+  lastActivityAt?: string
+}

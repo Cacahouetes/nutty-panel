@@ -7,6 +7,7 @@ import { DockerModule } from './modules/docker/docker.module'
 import { FilesModule } from './modules/files/files.module'
 import { IntegrationsModule } from './modules/integrations/integrations.module'
 import { MetricsModule } from './modules/metrics/metrics.module'
+import { ServerLifecycleModule } from './modules/server-lifecycle/server-lifecycle.module'
 import { ServersModule } from './modules/servers/servers.module'
 
 @Module({
@@ -18,6 +19,7 @@ import { ServersModule } from './modules/servers/servers.module'
     FilesModule,
     IntegrationsModule,
     MetricsModule,
+    ServerLifecycleModule,
   ],
   controllers: [AppController],
   providers: [AppService],

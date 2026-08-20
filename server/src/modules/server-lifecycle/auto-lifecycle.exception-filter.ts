@@ -1,0 +1,20 @@
+import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common'
+import type { Response } from 'express'
+import { AutoLifecycleNotFoundError, AutoLifecycleValidationError } from './auto-lifecycle.errors'
+
+@Catch(AutoLifecycleNotFoundError, AutoLifecycleValidationError)
+export class AutoLifecycleExceptionFilter implements ExceptionFilter {
+  catch(
+    error: AutoLifecycleNotFoundError | AutoLifecycleValidationError,
+    host: ArgumentsHost,
+  ): void {
+    const response = host.switchToHttp().getResponse<Response>()
+    const status =
+      error instanceof AutoLifecycleNotFoundError ? HttpStatus.NOT_FOUND : HttpStatus.BAD_REQUEST
+    response.status(status).json({
+      statusCode: status,
+      error: error.name,
+      message: error.message,
+    })
+  }
+}
