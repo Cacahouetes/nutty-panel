@@ -72,3 +72,13 @@ export const SUPPORTED_VERSIONS: Record<ServerType, readonly string[]> = {
   forge: ['1.20.1', '1.19.4'],
   bedrock: ['1.20.81', '1.20.71'],
 }
+
+export type FileEntryType = 'file' | 'directory'
+
+export interface FileEntry {
+  name: string
+  path: string
+  type: FileEntryType
+  sizeBytes?: number
+  modifiedAt?: string
+}

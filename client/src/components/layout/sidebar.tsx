@@ -19,7 +19,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/servers', label: 'Serveurs', icon: Rocket },
-  { label: 'Fichiers', icon: Boxes, soon: true },
+  { to: '/files', label: 'Fichiers', icon: Boxes },
   { label: 'Sauvegardes', icon: Archive, soon: true },
   { label: 'Intégrations', icon: Puzzle, soon: true },
   { label: 'Réglages', icon: Settings, soon: true },
