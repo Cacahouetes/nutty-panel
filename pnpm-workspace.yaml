@@ -6,6 +6,7 @@ packages:
 allowBuilds:
   '@scarf/scarf': false
   argon2: true
+  core-js: false
   cpu-features: false
   esbuild: true
   protobufjs: false

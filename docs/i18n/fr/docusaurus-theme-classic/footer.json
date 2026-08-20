@@ -1,0 +1,34 @@
+{
+  "link.title.Docs": {
+    "message": "Docs",
+    "description": "The title of the footer links column with title=Docs in the footer"
+  },
+  "link.title.Community": {
+    "message": "Communauté",
+    "description": "The title of the footer links column with title=Community in the footer"
+  },
+  "link.item.label.Introduction": {
+    "message": "Introduction",
+    "description": "The label of footer link to label=Introduction linking to /docs/intro"
+  },
+  "link.item.label.Installation": {
+    "message": "Installation",
+    "description": "The label of footer link to label=Installation linking to /docs/installation/quickstart"
+  },
+  "link.item.label.FAQ": {
+    "message": "FAQ",
+    "description": "The label of footer link to label=FAQ linking to /docs/faq"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link to label=GitHub linking to the GitHub repository"
+  },
+  "link.item.label.Issues": {
+    "message": "Issues",
+    "description": "The label of footer link to label=Issues linking to the issue tracker"
+  },
+  "copyright": {
+    "message": "Copyright © 2026 Nutty Panel. Construit avec Docusaurus.",
+    "description": "The footer copyright"
+  }
+}

@@ -1,0 +1,54 @@
+.hero {
+  text-align: center;
+  padding: 5rem 1rem 4rem;
+  background: linear-gradient(180deg, var(--ifm-color-primary-lightest), var(--ifm-background-color));
+}
+
+[data-theme='dark'] .hero {
+  background: linear-gradient(180deg, rgba(201, 132, 28, 0.15), var(--ifm-background-color));
+}
+
+.heroTitle {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+.heroTagline {
+  font-size: 1.25rem;
+  color: var(--ifm-color-emphasis-700);
+  max-width: 40rem;
+  margin: 0 auto 2rem;
+}
+
+.heroButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.featuresSection {
+  padding: 3rem 1rem 4rem;
+}
+
+.featuresTitle {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.5rem;
+}
+
+.featureCard {
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: var(--ifm-card-border-radius);
+  padding: 1.5rem;
+}
+
+.featureCard h3 {
+  color: var(--ifm-color-primary-darker);
+  margin-bottom: 0.75rem;
+}
