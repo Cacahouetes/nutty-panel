@@ -14,3 +14,12 @@ export interface ServerInstance {
   createdAt: Date
   updatedAt: Date
 }
+
+export interface MetricsSnapshot {
+  serverId: string
+  cpuPercent: number
+  memoryUsageBytes: number
+  memoryLimitBytes: number
+  memoryPercent: number
+  readAt: string
+}

@@ -8,13 +8,14 @@ import {
 } from './docker.service'
 import type { ContainerManager } from './container.manager'
 import type { ExecResult } from './container.manager'
-import type { ContainerSpec, ContainerState, DockerServerInput } from './container'
+import type { ContainerSpec, ContainerState, DockerRawStats, DockerServerInput } from './container'
 
 class FakeContainerManager implements ContainerManager {
   createdSpecs: ContainerSpec[] = []
   startedIds: string[] = []
   states = new Map<string, ContainerState>()
   logsByContainer = new Map<string, string[]>()
+  statsByContainer = new Map<string, DockerRawStats>()
   exportedIds: string[] = []
   putArchiveCalls: { containerId: string; path: string }[] = []
   execCalls: { containerId: string; cmd: string[] }[] = []
@@ -55,6 +56,24 @@ class FakeContainerManager implements ContainerManager {
   async logs(containerId: string, tail?: number): Promise<string[]> {
     const all = this.logsByContainer.get(containerId) ?? []
     return tail ? all.slice(-tail) : all
+  }
+
+  async stats(containerId: string): Promise<DockerRawStats> {
+    return (
+      this.statsByContainer.get(containerId) ?? {
+        read: '2026-01-01T00:00:00.000Z',
+        cpu_stats: {
+          cpu_usage: { total_usage: 0 },
+          system_cpu_usage: 0,
+          online_cpus: 1,
+        },
+        precpu_stats: {
+          cpu_usage: { total_usage: 0 },
+          system_cpu_usage: 0,
+        },
+        memory_stats: { usage: 0, limit: 0 },
+      }
+    )
   }
 
   async export(containerId: string): Promise<NodeJS.ReadableStream> {
@@ -285,6 +304,80 @@ describe('DockerService', () => {
 
       await expect(service.getLogs(server.id, 2)).resolves.toEqual(['b', 'c'])
       await expect(service.getLogs(server.id)).resolves.toEqual(['a', 'b', 'c'])
+    })
+  })
+
+  describe('getMetrics', () => {
+    const server: DockerServerInput = {
+      id: 'server-1',
+      type: 'paper',
+      version: '1.20.4',
+      port: 25565,
+      memoryMb: 2048,
+      cpuPercent: 50,
+    }
+
+    it('computes cpu and memory percentages from the container stats', async () => {
+      const fake = new FakeContainerManager()
+      const service = createDockerService({ containerManager: fake })
+      await service.deploy(server)
+      fake.statsByContainer.set('container-1', {
+        read: '2026-01-01T00:00:01.000Z',
+        cpu_stats: {
+          cpu_usage: { total_usage: 2000, usage_in_kernelmode: 100, usage_in_usermode: 900 },
+          system_cpu_usage: 20000,
+          online_cpus: 4,
+        },
+        precpu_stats: {
+          cpu_usage: { total_usage: 1000, usage_in_kernelmode: 50, usage_in_usermode: 450 },
+          system_cpu_usage: 10000,
+        },
+        memory_stats: { usage: 512 * 1024 * 1024, limit: 2048 * 1024 * 1024 },
+      })
+
+      const metrics = await service.getMetrics(server.id)
+
+      expect(metrics.cpuPercent).toBeCloseTo(40)
+      expect(metrics.memoryUsageBytes).toBe(512 * 1024 * 1024)
+      expect(metrics.memoryLimitBytes).toBe(2048 * 1024 * 1024)
+      expect(metrics.memoryPercent).toBeCloseTo(25)
+      expect(metrics.readAt).toEqual(new Date('2026-01-01T00:00:01.000Z'))
+    })
+
+    it('reports zero cpu when the system cpu did not advance', async () => {
+      const fake = new FakeContainerManager()
+      const service = createDockerService({ containerManager: fake })
+      await service.deploy(server)
+      fake.statsByContainer.set('container-1', {
+        read: '2026-01-01T00:00:01.000Z',
+        cpu_stats: {
+          cpu_usage: { total_usage: 2000 },
+          system_cpu_usage: 10000,
+        },
+        precpu_stats: {
+          cpu_usage: { total_usage: 1000 },
+          system_cpu_usage: 10000,
+        },
+        memory_stats: { usage: 100, limit: 1024 },
+      })
+
+      await expect(service.getMetrics(server.id)).resolves.toMatchObject({
+        cpuPercent: 0,
+        memoryPercent: 9.765625,
+      })
+    })
+
+    it('throws NotFoundError for an undeployed server', async () => {
+      await expect(buildDockerService().getMetrics('missing')).rejects.toThrow(NotFoundError)
+    })
+
+    it('throws ConflictError when the container is not running', async () => {
+      const fake = new FakeContainerManager()
+      const service = createDockerService({ containerManager: fake })
+      await service.deploy(server)
+      await service.stop(server.id)
+
+      await expect(service.getMetrics(server.id)).rejects.toThrow(ConflictError)
     })
   })
 })

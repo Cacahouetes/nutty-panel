@@ -6,6 +6,7 @@ import { BackupsModule } from './modules/backups/backups.module'
 import { DockerModule } from './modules/docker/docker.module'
 import { FilesModule } from './modules/files/files.module'
 import { IntegrationsModule } from './modules/integrations/integrations.module'
+import { MetricsModule } from './modules/metrics/metrics.module'
 import { ServersModule } from './modules/servers/servers.module'
 
 @Module({
@@ -16,6 +17,7 @@ import { ServersModule } from './modules/servers/servers.module'
     BackupsModule,
     FilesModule,
     IntegrationsModule,
+    MetricsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

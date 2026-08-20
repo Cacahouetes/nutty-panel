@@ -20,6 +20,14 @@ export interface Deployment {
   state: ContainerState
 }
 
+export interface ContainerMetrics {
+  cpuPercent: number
+  memoryUsageBytes: number
+  memoryLimitBytes: number
+  memoryPercent: number
+  readAt: Date
+}
+
 export interface DockerService {
   deploy(server: DockerServerInput): Promise<Deployment>
   start(serverId: string): Promise<Deployment>
@@ -29,6 +37,7 @@ export interface DockerService {
   remove(serverId: string): Promise<void>
   getStatus(serverId: string): Promise<ContainerState>
   getLogs(serverId: string, tail?: number): Promise<string[]>
+  getMetrics(serverId: string): Promise<ContainerMetrics>
   exportData(serverId: string): Promise<NodeJS.ReadableStream>
   importData(serverId: string, stream: NodeJS.ReadableStream): Promise<void>
   execCommand(serverId: string, cmd: string[], opts?: ExecOptions): Promise<ExecResult>
@@ -138,6 +147,28 @@ class DefaultDockerService implements DockerService {
   async getLogs(serverId: string, tail?: number): Promise<string[]> {
     const stored = this.mustFind(serverId)
     return this.deps.containerManager.logs(stored.ref.id, tail)
+  }
+
+  async getMetrics(serverId: string): Promise<ContainerMetrics> {
+    const stored = this.mustFind(serverId)
+    const state = await this.deps.containerManager.inspect(stored.ref.id)
+    if (state !== 'running') {
+      throw new ConflictError(`server not running: ${serverId}`)
+    }
+    const raw = await this.deps.containerManager.stats(stored.ref.id)
+    const cpuDelta = raw.cpu_stats.cpu_usage.total_usage - raw.precpu_stats.cpu_usage.total_usage
+    const systemDelta = raw.cpu_stats.system_cpu_usage - raw.precpu_stats.system_cpu_usage
+    const onlineCpus = raw.cpu_stats.online_cpus ?? 1
+    const cpuPercent =
+      systemDelta > 0 && cpuDelta >= 0 ? (cpuDelta / systemDelta) * onlineCpus * 100 : 0
+    const memoryLimitBytes = raw.memory_stats.limit || 1
+    return {
+      cpuPercent,
+      memoryUsageBytes: raw.memory_stats.usage,
+      memoryLimitBytes: raw.memory_stats.limit,
+      memoryPercent: (raw.memory_stats.usage / memoryLimitBytes) * 100,
+      readAt: new Date(raw.read),
+    }
   }
 
   async exportData(serverId: string): Promise<NodeJS.ReadableStream> {

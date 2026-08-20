@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ServerStatusBadge } from '@/components/servers/server-status-badge'
+import { ServerMetrics } from '@/components/servers/server-metrics'
 
 const TYPE_LABELS: Record<ServerInstance['type'], string> = {
   vanilla: 'Vanilla',
@@ -117,6 +118,7 @@ export function DashboardPage() {
                 <div className="text-sm text-muted-foreground">
                   {server.memoryMb} Mo · {server.cpuPercent} % CPU
                 </div>
+                <ServerMetrics serverId={server.id} enabled={server.status === 'running'} />
                 <div className="flex gap-2">
                   {server.status === 'stopped' || server.status === 'error' ? (
                     <Button

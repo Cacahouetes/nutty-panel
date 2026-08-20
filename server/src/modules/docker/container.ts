@@ -2,6 +2,20 @@ import type { ServerType } from '../servers/server-instance'
 
 export type ContainerState = 'created' | 'running' | 'stopped' | 'removed'
 
+export interface DockerRawStats {
+  read: string
+  cpu_stats: {
+    cpu_usage: { total_usage: number; usage_in_kernelmode?: number; usage_in_usermode?: number }
+    system_cpu_usage: number
+    online_cpus?: number
+  }
+  precpu_stats: {
+    cpu_usage: { total_usage: number; usage_in_kernelmode?: number; usage_in_usermode?: number }
+    system_cpu_usage: number
+  }
+  memory_stats: { usage: number; limit: number }
+}
+
 export interface ContainerPort {
   containerPort: number
   hostPort: number

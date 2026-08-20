@@ -1,4 +1,4 @@
-import type { ContainerSpec, ContainerState } from './container'
+import type { ContainerSpec, ContainerState, DockerRawStats } from './container'
 
 export interface ExecResult {
   exitCode: number
@@ -19,6 +19,7 @@ export interface ContainerManager {
   remove(containerId: string): Promise<void>
   inspect(containerId: string): Promise<ContainerState>
   logs(containerId: string, tail?: number): Promise<string[]>
+  stats(containerId: string): Promise<DockerRawStats>
   export(containerId: string): Promise<NodeJS.ReadableStream>
   putArchive(containerId: string, stream: NodeJS.ReadableStream, path: string): Promise<void>
   exec(containerId: string, cmd: string[], opts?: ExecOptions): Promise<ExecResult>

@@ -2,7 +2,7 @@ import Docker from 'dockerode'
 import { PassThrough } from 'node:stream'
 import { once } from 'node:events'
 import type { ContainerManager, ExecOptions, ExecResult } from './container.manager'
-import type { ContainerSpec, ContainerState } from './container'
+import type { ContainerSpec, ContainerState, DockerRawStats } from './container'
 
 export class DockerContainerManager implements ContainerManager {
   constructor(private readonly docker: Docker = new Docker()) {}
@@ -66,6 +66,11 @@ export class DockerContainerManager implements ContainerManager {
       .logs({ stdout: true, stderr: true, tail })
     const text = demuxLogBuffer(buffer)
     return text.split(/\r?\n/).filter((line) => line.length > 0)
+  }
+
+  async stats(containerId: string): Promise<DockerRawStats> {
+    const raw = (await this.docker.getContainer(containerId).stats({ stream: false })) as unknown
+    return normalizeStats(raw as Record<string, unknown>)
   }
 
   async export(containerId: string): Promise<NodeJS.ReadableStream> {
@@ -145,6 +150,42 @@ function mapDockerState(status: string): ContainerState {
     default:
       return 'stopped'
   }
+}
+
+function normalizeStats(raw: Record<string, unknown>): DockerRawStats {
+  const cpuUsage = raw.cpu_stats as Record<string, unknown> | undefined
+  const precpuUsage = raw.precpu_stats as Record<string, unknown> | undefined
+  const memory = raw.memory_stats as Record<string, unknown> | undefined
+  return {
+    read: typeof raw.read === 'string' ? raw.read : new Date().toISOString(),
+    cpu_stats: {
+      cpu_usage: {
+        total_usage: num(cpuUsage?.cpu_usage, 'total_usage'),
+        usage_in_kernelmode: num(cpuUsage?.cpu_usage, 'usage_in_kernelmode'),
+        usage_in_usermode: num(cpuUsage?.cpu_usage, 'usage_in_usermode'),
+      },
+      system_cpu_usage: num(cpuUsage, 'system_cpu_usage'),
+      online_cpus: num(cpuUsage, 'online_cpus'),
+    },
+    precpu_stats: {
+      cpu_usage: {
+        total_usage: num(precpuUsage?.cpu_usage, 'total_usage'),
+        usage_in_kernelmode: num(precpuUsage?.cpu_usage, 'usage_in_kernelmode'),
+        usage_in_usermode: num(precpuUsage?.cpu_usage, 'usage_in_usermode'),
+      },
+      system_cpu_usage: num(precpuUsage, 'system_cpu_usage'),
+    },
+    memory_stats: {
+      usage: num(memory, 'usage'),
+      limit: num(memory, 'limit'),
+    },
+  }
+}
+
+function num(parent: unknown, key: string): number {
+  if (!parent || typeof parent !== 'object') return 0
+  const value = (parent as Record<string, unknown>)[key]
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
 function demuxLogBuffer(buffer: Buffer): string {

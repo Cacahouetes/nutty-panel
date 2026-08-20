@@ -55,6 +55,16 @@ class FakeDockerService implements DockerService {
     return []
   }
 
+  async getMetrics() {
+    return {
+      cpuPercent: 0,
+      memoryUsageBytes: 0,
+      memoryLimitBytes: 1,
+      memoryPercent: 0,
+      readAt: new Date(0),
+    }
+  }
+
   async exportData(): Promise<NodeJS.ReadableStream> {
     return Readable.from([])
   }
