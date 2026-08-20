@@ -30,3 +30,12 @@ export interface AutoStartPolicy {
   inactiveMinutes: number
   lastActivityAt?: string
 }
+
+export interface PlayitTunnel {
+  serverId: string
+  serverName: string
+  tunnelId: string
+  host: string
+  port: number
+  createdAt: string
+}

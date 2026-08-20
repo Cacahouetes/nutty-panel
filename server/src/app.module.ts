@@ -7,6 +7,7 @@ import { DockerModule } from './modules/docker/docker.module'
 import { EventsModule } from './modules/events/events.module'
 import { FilesModule } from './modules/files/files.module'
 import { IntegrationsModule } from './modules/integrations/integrations.module'
+import { PlayitModule } from './modules/integrations/playit/playit.module'
 import { MetricsModule } from './modules/metrics/metrics.module'
 import { ServerLifecycleModule } from './modules/server-lifecycle/server-lifecycle.module'
 import { ServersModule } from './modules/servers/servers.module'
@@ -21,6 +22,7 @@ import { WebhooksModule } from './modules/webhooks/webhooks.module'
     BackupsModule,
     FilesModule,
     IntegrationsModule,
+    PlayitModule,
     MetricsModule,
     ServerLifecycleModule,
     WebhooksModule,

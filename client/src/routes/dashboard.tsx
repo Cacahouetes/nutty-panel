@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ServerStatusBadge } from '@/components/servers/server-status-badge'
 import { ServerMetrics } from '@/components/servers/server-metrics'
 import { ServerAutoStart } from '@/components/servers/server-auto-start'
+import { ServerPlayitTunnel } from '@/components/servers/server-playit-tunnel'
 
 const TYPE_LABELS: Record<ServerInstance['type'], string> = {
   vanilla: 'Vanilla',
@@ -121,6 +122,7 @@ export function DashboardPage() {
                 </div>
                 <ServerMetrics serverId={server.id} enabled={server.status === 'running'} />
                 <ServerAutoStart serverId={server.id} />
+                <ServerPlayitTunnel serverId={server.id} />
                 <div className="flex gap-2">
                   {server.status === 'stopped' || server.status === 'error' ? (
                     <Button
