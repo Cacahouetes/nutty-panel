@@ -20,7 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/servers', label: 'Serveurs', icon: Rocket },
   { to: '/files', label: 'Fichiers', icon: Boxes },
-  { label: 'Sauvegardes', icon: Archive, soon: true },
+  { to: '/backups', label: 'Sauvegardes', icon: Archive },
   { label: 'Intégrations', icon: Puzzle, soon: true },
   { label: 'Réglages', icon: Settings, soon: true },
 ]

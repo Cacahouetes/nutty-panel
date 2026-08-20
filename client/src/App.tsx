@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/app-layout'
 import { RequireAuth } from '@/components/auth/require-auth'
+import { BackupsPage } from '@/routes/backups'
 import { DashboardPage } from '@/routes/dashboard'
 import { FilesPage } from '@/routes/files'
 import { LoginPage } from '@/routes/login'
@@ -22,6 +23,7 @@ function App() {
         <Route index element={<DashboardPage />} />
         <Route path="servers" element={<ServersPage />} />
         <Route path="files" element={<FilesPage />} />
+        <Route path="backups" element={<BackupsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

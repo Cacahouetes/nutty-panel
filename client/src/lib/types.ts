@@ -82,3 +82,17 @@ export interface FileEntry {
   sizeBytes?: number
   modifiedAt?: string
 }
+
+export interface Backup {
+  id: string
+  serverId: string
+  createdAt: string
+  sizeBytes: number
+  archiveKey: string
+}
+
+export interface BackupPolicy {
+  serverId: string
+  intervalMinutes: number
+  maxBackups: number
+}
